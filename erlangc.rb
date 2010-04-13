@@ -111,6 +111,6 @@ def optimum_staff(cpi,interval,aht,sl_goal,asa_goal,se)
   puts "Shrinkage of #{se}% is assumed."
   puts "=============================================================================================="
   for i in (low_lvl..high_lvl)
-    puts "#{i} agents [#{schedule_efficiency(i,se)} w/shrink]: SVL=#{(svl(cpi,interval,aht,i,asa_goal)*100).to_i}/#{asa_goal}  ASA=#{asa(cpi,interval,aht,i).to_i} secs#{' <<< OPTIMUM' if i == optimum_lvl}"
+    puts "#{i} agents [#{schedule_efficiency(i,se)} w/shrink]: SVL=#{(svl(cpi,interval,aht,i,asa_goal)*100).to_i}/#{asa_goal}  ASA=#{asa(cpi,interval,aht,i).to_i} secs  OCC=#{(occupancy(cpi,interval,aht,i)*100).to_i}#{' <<< OPTIMUM' if i == optimum_lvl}"
   end
 end
