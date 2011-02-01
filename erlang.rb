@@ -45,9 +45,9 @@ class ErlangRequest
     if is_numeric?([cpi,interval,aht,svl_goal,asa_goal,occ_goal]) &&
         !(cpi.nil? || aht.nil?) then
        
-        @cpi = cpi > 0 ? cpi.to_i : nil 
+        @cpi = cpi > 0 ? cpi.to_i : 0 
         @interval = interval||0.between?(1,3600) ? interval.to_i : 1800
-        @aht = aht||0.between?(1,3600) ? aht.to_i : nil
+        @aht = aht||0.between?(1,3600) ? aht.to_i : 0
         @svl_goal = svl_goal||0.between?(1,100) ? svl_goal.to_f : 80.0
         @asa_goal = asa_goal||0 > 0 ? asa_goal.to_f : 20.0
         @occ_goal = occ_goal||0.between?(1,100) ? occ_goal.to_f : 100.0
@@ -75,7 +75,7 @@ class ErlangRequest
   end
   
   def rho(m)
-    m > 0 ? (self.traffic_intensity / m.to_f) : nil
+    self.valid? && m > 0 ? (self.traffic_intensity / m.to_f) : nil
   end  
   
   def erlangc(m)
@@ -88,9 +88,10 @@ class ErlangRequest
   end
   
   def svl(m)
+    return nil if self.invalid?
     u = self.traffic_intensity
     result = (1.0-(erlangc(m) * Math.exp((-(m-u)) * (@asa_goal / @aht))))
-    return self.valid? ? result : nil
+    return result
   end
   
   def asa(m)
@@ -98,10 +99,11 @@ class ErlangRequest
   end
   
   def imm_ans(m)
-    result = 1.0 - erlangc(m)
+    result = self.valid? ? 1.0 - erlangc(m) : nil
   end
   
   def agents_required
+    return nil if self.invalid?
     svl_ok, optimum, i = false, 0, 1
     while svl_ok == false
       if  self.svl(i) >= (@svl_goal.to_f / 100) && self.rho(i) <= 1.0 &&
@@ -116,6 +118,7 @@ class ErlangRequest
   end
   
   def optimum_staff(offset)
+    return nil if self.invalid?
     result = {}
     i = @agents_required + offset.to_i || 0
     if i > 0
@@ -128,6 +131,7 @@ class ErlangRequest
   end
   
   def optimum_array(format=false)
+    return nil if self.invalid?
     result = []
     for i in (-5..5)
       result << optimum_staff(i)
