@@ -15,6 +15,11 @@ module ErlangFunctions
     end
     return result
   end
+  
+  def is_numeric?(myval)
+    myval.is_a?(Fixnum) || myval.is_a?(Float) || myval.is_a?(NilClass)
+  end
+  
 end
 
 class ErlangRequest
@@ -32,12 +37,8 @@ class ErlangRequest
   def initialize( cpi, interval, aht, svl_goal, asa_goal, occ_goal)
     
     # there HAS to be a better way of doing this!
-    if ((cpi.is_a?(Fixnum) || cpi.is_a?(Float) || cpi.is_a?(NilClass))) &&
-       ((interval.is_a?(Fixnum) || interval.is_a?(Float) || interval.is_a?(NilClass)))&&
-       ((aht.is_a?(Fixnum) || aht.is_a?(Float) || aht.is_a?(NilClass))) &&
-       ((svl_goal.is_a?(Fixnum) || svl_goal.is_a?(Float) || svl_goal.is_a?(NilClass))) &&
-       ((asa_goal.is_a?(Fixnum) || asa_goal.is_a?(Float) || asa_goal.is_a?(NilClass))) &&
-       ((occ_goal.is_a?(Fixnum) || occ_goal.is_a?(Float) || occ_goal.is_a?(NilClass)))
+    if is_numeric?(cpi) && is_numeric?(interval) &&  is_numeric?(aht) &&
+       is_numeric?(svl_goal) &&  is_numeric?(asa_goal) &&  is_numeric?(occ_goal)
        
         @cpi = cpi||0 > 0 ? cpi.to_i : nil 
         @interval = interval||0.between?(1,3600) ? interval.to_i : 1800
