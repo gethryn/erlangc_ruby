@@ -17,7 +17,13 @@ module ErlangFunctions
   end
   
   def is_numeric?(myval)
-    myval.is_a?(Fixnum) || myval.is_a?(Float) || myval.is_a?(NilClass)
+    if myval.is_a?(Array) then
+      myval.each do |a|
+        return false unless a.is_a?(Fixnum) || a.is_a?(Float) || a.is_a?(NilClass)
+      end
+    else
+      myval.is_a?(Fixnum) || myval.is_a?(Float) || myval.is_a?(NilClass)
+    end
   end
   
 end
@@ -36,11 +42,10 @@ class ErlangRequest
   # create an ErlangRequest, if response contains @error something has gone wrong.
   def initialize( cpi, interval, aht, svl_goal, asa_goal, occ_goal)
     
-    # there HAS to be a better way of doing this!
-    if is_numeric?(cpi) && is_numeric?(interval) &&  is_numeric?(aht) &&
-       is_numeric?(svl_goal) &&  is_numeric?(asa_goal) &&  is_numeric?(occ_goal)
+    if is_numeric?([cpi,interval,aht,svl_goal,asa_goal,occ_goal]) &&
+        !(cpi.nil? || aht.nil?) then
        
-        @cpi = cpi||0 > 0 ? cpi.to_i : nil 
+        @cpi = cpi > 0 ? cpi.to_i : nil 
         @interval = interval||0.between?(1,3600) ? interval.to_i : 1800
         @aht = aht||0.between?(1,3600) ? aht.to_i : nil
         @svl_goal = svl_goal||0.between?(1,100) ? svl_goal.to_f : 80.0
