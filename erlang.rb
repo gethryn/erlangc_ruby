@@ -91,6 +91,10 @@ class ErlangRequest
     result = self.valid? ? (self.erlangc(m) * @aht) / (m * (1-self.rho(m))) : nil
   end
   
+  def imm_ans(m)
+    result = 1.0 - erlangc(m)
+  end
+  
   def agents_required
     svl_ok, optimum, i = false, 0, 1
     while svl_ok == false
@@ -110,9 +114,9 @@ class ErlangRequest
     i = @agents_required + offset.to_i || 0
     if i > 0
       result = {:agents => i, :occ => self.rho(i) * 100, :svl => self.svl(i) * 100, :asa => self.asa(i), 
-                :optimum_offset => offset }
+                :imm_ans => self.imm_ans(i) * 100, :optimum_offset => offset }
     else
-      result = {:agents => nil, :occ => nil, :svl => nil, :asa => nil, :optimum_offset => nil}
+      result = {:agents => nil, :occ => nil, :svl => nil, :asa => nil, :imm_ans => nil, :optimum_offset => nil}
     end
     return result
   end
@@ -123,10 +127,10 @@ class ErlangRequest
       result << optimum_staff(i)
     end
     if format == true
-      puts "Agents,Occupancy,Service Level,ASA,Optimum Offset"
+      puts "Agents,Occupancy,Service Level,ASA,Immediate Answer,Optimum Offset"
       result.each do |r|
-        printf("%03i,%5.1f%%,%5.1f%%,%7.1f, %+i\n", 
-                r[:agents], r[:occ].to_f, r[:svl].to_f, r[:asa].to_f,r[:optimum_offset])
+        printf("%03i,%5.1f%%,%5.1f%%,%7.1f, %5.1f%%,%+i\n", 
+                r[:agents], r[:occ].to_f, r[:svl].to_f, r[:asa].to_f, r[:imm_ans].to_f, r[:optimum_offset])
       end
     else
       return result
