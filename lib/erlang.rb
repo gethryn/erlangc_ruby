@@ -202,7 +202,7 @@ class ErlangRequest
   def agents_required
     return nil if self.invalid?
     svl_ok, optimum, i = false, 0, 1
-    while svl_ok == false && i <= MAX_AGENTS
+    while svl_ok == false && i < MAX_AGENTS
       if  self.svl(i) >= (@svl_goal.to_f / 100) && self.rho(i) <= 1.0 &&
           self.rho(i) <= (@max_occ.to_f / 100) && self.asa(i) <= @asa_goal &&
           self.valid?
@@ -211,7 +211,7 @@ class ErlangRequest
       end
       i += 1
     end
-    @error << "MAX_AGENTS exceeded" if i == (MAX_AGENTS+1)
+    @error << "MAX_AGENTS exceeded [#{MAX_AGENTS}]" if i == MAX_AGENTS
     return optimum || 0
   end
   
