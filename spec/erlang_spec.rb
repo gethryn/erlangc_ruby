@@ -26,8 +26,21 @@ describe ErlangRequest do
     e.asa_goal.should == 20
     e.occ_goal.should == 100
     e.interval.should == 1800
+    e.valid?.should == true
   end
   
+  it "automatically substitutes defaults for non critical inputs" do
+    e=ErlangRequest.new(342,430)
+    e.svl_goal.should == 80
+    e.asa_goal.should == 20
+    e.occ_goal.should == 100
+    e.interval.should == 1800
+    e.valid?.should == true
+    e.agents_required.should == 90
+    e.warning.count.should == 4
+  end
+    
+    
   it "properly handles blanks or strings passed in error" do
     e=ErlangRequest.new("","430",nil,nil,nil,nil)
     e.error.should == "Invalid information supplied to ErlangRequest Initialize method"
