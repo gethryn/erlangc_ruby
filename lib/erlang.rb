@@ -1,4 +1,5 @@
 #CONFIGURATION OF DEFAULT VALUES FROM YAML FILE
+#adjust yaml location if required
 require 'yaml'
 default_vals = YAML::parse( File.open ( "config.yaml" ) )
 DEFAULT_SVLGOAL = default_vals['svl_goal'].value.to_i || 80
@@ -77,12 +78,46 @@ module ErlangInputTests
     end
     
     def check_inputs(cpi,aht,interval,svl_goal,asa_goal,max_occ)
+      
+      #key inputs: CPI and AHT
       @cpi = cpi # mandatory input, no default
       @aht = aht # mandatory input, no default
-      @interval = validInterval?(interval) ? interval : DEFAULT_INTERVAL
-      @svl_goal = validSvlGoal?(svl_goal) ? svl_goal : DEFAULT_SVLGOAL
-      @asa_goal = validASAGoal?(asa_goal) ? asa_goal : DEFAULT_ASAGOAL
-      @max_occ = validMaxOcc?(max_occ) ? max_occ : DEFAULT_MAXOCC        
+      
+      #interval
+      if validInterval?(interval) 
+        @interval = interval 
+      else
+        @interval = DEFAULT_INTERVAL
+        @warning << "#{interval} is an invalid Interval Length, default used [#{DEFAULT_INTERVAL}]"
+        p "#{interval} is an invalid Interval Length, default used [#{DEFAULT_INTERVAL}]" 
+      end
+      
+      #service level goal
+      if validSvlGoal?(svl_goal)
+        @svl_goal = svl_goal 
+      else
+        @svl_goal = DEFAULT_SVLGOAL
+        @warning << "#{svl_goal} is an invalid Service Level Goal default used [#{DEFAULT_SVLGOAL}]"
+        p "#{svl_goal} is an invalid Service Level Goal default used [#{DEFAULT_SVLGOAL}]"
+      end
+      
+      #Avg Speed of Answer Goal
+      if validASAGoal?(asa_goal) 
+        @asa_goal = asa_goal
+      else
+        @asa_goal = DEFAULT_ASAGOAL
+        @warning << "#{asa_goal} is an invalid Avg Speed of Answer Goal, default used [#{DEFAULT_ASAGOAL}]"
+        p "#{asa_goal} is an invalid Avg Speed of Answer Goal, default used [#{DEFAULT_ASAGOAL}]"
+      end
+      
+      #Maximum Occupancy Goal
+      if validMaxOcc?(max_occ) 
+        @max_occ = max_occ
+      else
+        @max_occ = DEFAULT_MAXOCC
+        @warning << "#{max_occ} is an invalid Maximum Occupancy, default used [#{DEFAULT_MAXOCC}]"
+        p "#{max_occ} is an invalid Maximum Occupancy, default used [#{DEFAULT_MAXOCC}]"
+      end
     end
     
 end
@@ -94,7 +129,7 @@ class ErlangRequest
     
   # define the list of attributes, and metaprogram reader modules.
   attributes = %w[cpi aht interval svl_goal asa_goal max_occ svl_result occ_result 
-                  asa_result detail_result error]
+                  asa_result detail_result error warning]
   attributes.each do |a|
     attr_reader a
   end
@@ -106,12 +141,14 @@ class ErlangRequest
                  svl_goal = DEFAULT_SVLGOAL, 
                  asa_goal = DEFAULT_ASAGOAL, 
                  max_occ = DEFAULT_MAXOCC)
-    
+    @error = []
+    @warning = []
+      
     if validInputs?( cpi, aht )
       check_inputs(cpi,aht,interval,svl_goal,asa_goal,max_occ)
       
       @valid = true
-      @error = []
+      @error << nil
       @agents_required = self.agents_required
       @svl_result = self.svl(@agents_required)
       @asa_result = self.asa(@agents_required)
@@ -120,7 +157,8 @@ class ErlangRequest
       return self
     else
       @valid = false
-      @error << "Invalid information supplied to ErlangRequest Initialize method"
+      @error << "Invalid information supplied, cannot continue - CPI: #{cpi}, AHT: #{aht}."
+      @warning << nil
       return nil
     end
   end
