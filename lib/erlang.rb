@@ -89,7 +89,6 @@ module ErlangInputTests
       else
         @interval = DEFAULT_INTERVAL
         @warning << "#{interval} is an invalid Interval Length, default used [#{DEFAULT_INTERVAL}]"
-        p "#{interval} is an invalid Interval Length, default used [#{DEFAULT_INTERVAL}]" 
       end
       
       #service level goal
@@ -98,7 +97,6 @@ module ErlangInputTests
       else
         @svl_goal = DEFAULT_SVLGOAL
         @warning << "#{svl_goal} is an invalid Service Level Goal default used [#{DEFAULT_SVLGOAL}]"
-        p "#{svl_goal} is an invalid Service Level Goal default used [#{DEFAULT_SVLGOAL}]"
       end
       
       #Avg Speed of Answer Goal
@@ -107,7 +105,6 @@ module ErlangInputTests
       else
         @asa_goal = DEFAULT_ASAGOAL
         @warning << "#{asa_goal} is an invalid Avg Speed of Answer Goal, default used [#{DEFAULT_ASAGOAL}]"
-        p "#{asa_goal} is an invalid Avg Speed of Answer Goal, default used [#{DEFAULT_ASAGOAL}]"
       end
       
       #Maximum Occupancy Goal
@@ -116,7 +113,6 @@ module ErlangInputTests
       else
         @max_occ = DEFAULT_MAXOCC
         @warning << "#{max_occ} is an invalid Maximum Occupancy, default used [#{DEFAULT_MAXOCC}]"
-        p "#{max_occ} is an invalid Maximum Occupancy, default used [#{DEFAULT_MAXOCC}]"
       end
     end
     
