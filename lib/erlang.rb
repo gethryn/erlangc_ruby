@@ -1,10 +1,16 @@
 require 'yaml'
-config = YAML::load(File.open('config.yaml'))
-DEFAULT_SVL = config[:defaults][:svl_goal]
-DEFAULT_ASA = config[:defaults][:asa_goal]
-DEFAULT_INTERVAL = config[:defaults][:interval]
-DEAFULT_MAXOCC = config[:defaults][:max_occ]
 
+default_vals = YAML::parse ( <<EOY )
+svl_goal: 80
+asa_goal: 20
+interval: 1800
+max_occ: 100
+EOY
+
+DEFAULT_SVL = default_vals.value['svl_goal']
+DEFAULT_ASA = default_vals.value['asa_goal']
+DEFAULT_INTERVAL = default_vals.value['interval']
+DEAFULT_MAXOCC = default_vals.value['max_occ']
 
 module ErlangFunctions
   
@@ -30,8 +36,10 @@ module ErlangInputTests
     
     def numeric?(object)
       if object.is_a(Array)
-        object.each do |n|
-          if !numeric?(n) return false
+        false_count = 0
+        object.each do |val| 
+          return false unless numeric?(val)
+        end
       else
         true if Float(object) rescue false
       end
@@ -73,7 +81,7 @@ module ErlangInputTests
       validCPI?(cpi) && validAHT?(aht)
     end
     
-    def check_inputs( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
+    def check_inputs(cpi,interval,aht,svl_goal,asa_goal,occ_goal)
       @cpi = cpi # mandatory input, no default
       @aht = aht # mandatory input, no default
       @interval = validInterval?(interval) ? interval : DEFAULT_INTERVAL
@@ -85,7 +93,7 @@ module ErlangInputTests
 end
 
 class ErlangRequest
-
+  
   include ErlangFunctions
   include ErlangInputTests
     
@@ -100,7 +108,7 @@ class ErlangRequest
   def initialize( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
     
     if validInputs?( cpi, aht )
-      check_inputs ( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
+      check_inputs(cpi,interval,aht,svl_goal,asa_goal,occ_goal)
       @valid = true
       @agents_required = self.agents_required
       @svl_result = self.svl(@agents_required)
