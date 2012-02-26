@@ -1,0 +1,5 @@
+defaults:
+    svl_goal: 80
+    asa_goal: 20
+    interval: 1800
+    max_occ: 100

@@ -1,3 +1,11 @@
+require 'yaml'
+config = YAML::load(File.open('config.yaml'))
+DEFAULT_SVL = config[:defaults][:svl_goal]
+DEFAULT_ASA = config[:defaults][:asa_goal]
+DEFAULT_INTERVAL = config[:defaults][:interval]
+DEAFULT_MAXOCC = config[:defaults][:max_occ]
+
+
 module ErlangFunctions
   
   def factorial(n)
@@ -16,21 +24,70 @@ module ErlangFunctions
     return result
   end
   
-  def is_numeric?(myval)
-    if myval.is_a?(Array) then
-      myval.each do |a|
-        return false unless a.is_a?(Fixnum) || a.is_a?(Float) || a.is_a?(NilClass)
+end
+
+module ErlangInputTests
+    
+    def numeric?(object)
+      if object.is_a(Array)
+        object.each do |n|
+          if !numeric?(n) return false
+      else
+        true if Float(object) rescue false
       end
-    else
-      myval.is_a?(Fixnum) || myval.is_a?(Float) || myval.is_a?(NilClass)
     end
-  end
-  
+
+    def numeric_between?( object, start, finish )
+      numeric?(object) && object.between?( start , finish )
+    end
+
+    def numeric_in_list?( object, list )
+      numeric?(object) && list.include?(object)
+    end
+    
+    def validCPI?(cpi)
+        numeric_between?(cpi,1,9999) 
+    end
+    
+    def validInterval?(interval)
+        numeric_in_list?(interval,[900,1800,3600])
+    end
+    
+    def validAHT?(aht)
+        numeric_between?(aht,1,3600)
+    end
+    
+    def validSvlGoal?(svl_goal)
+        numeric_between?(svl_goal,1,100)
+    end
+    
+    def validASAGoal?(asa_goal)
+        numeric_between?(asa_goal,1,3600)
+    end
+    
+    def validMaxOcc?(max_occ)
+        numeric_between?(max_occ,1,100)
+    end
+    
+    def validInputs?( cpi, aht )
+      validCPI?(cpi) && validAHT?(aht)
+    end
+    
+    def check_inputs( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
+      @cpi = cpi # mandatory input, no default
+      @aht = aht # mandatory input, no default
+      @interval = validInterval?(interval) ? interval : DEFAULT_INTERVAL
+      @svl_goal = validSvlGoal?(svl_goal) ? svl_goal : DEFAULT_SVLGOAL
+      @asa_goal = validASAGoal?(asa_goal) ? asa_goal : DEFAULT_ASAGOAL
+      @max_occ = validMaxOcc?(max_occ) ? max_occ : DEFAULT_MAXOCC
+    end
+    
 end
 
 class ErlangRequest
-  
+
   include ErlangFunctions
+  include ErlangInputTests
     
   # define the list of attributes, and metaprogram reader modules.
   attributes = %w[cpi interval aht svl_goal asa_goal occ_goal svl_result occ_result 
@@ -40,36 +97,28 @@ class ErlangRequest
   end
   
   # create an ErlangRequest, if response contains @error something has gone wrong.
-  def initialize( cpi, interval, aht, svl_goal, asa_goal, occ_goal)
+  def initialize( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
     
-    if is_numeric?([cpi,interval,aht,svl_goal,asa_goal,occ_goal]) &&
-        !(cpi.nil? || aht.nil?) then
-       
-        @cpi = cpi > 0 ? cpi.to_i : 0 
-        @interval = interval||0.between?(1,3600) ? interval.to_i : 1800
-        @aht = aht||0.between?(1,3600) ? aht.to_i : 0
-        @svl_goal = svl_goal||0.between?(1,100) ? svl_goal.to_f : 80.0
-        @asa_goal = asa_goal||0 > 0 ? asa_goal.to_f : 20.0
-        @occ_goal = occ_goal||0.between?(1,100) ? occ_goal.to_f : 100.0
-        @valid = self.valid?
-        @agents_required = self.agents_required
-        @svl_result = self.svl(@agents_required)
-        @asa_result = self.asa(@agents_required)
-        @occ_result = self.rho(@agents_required)
-        @detail_result = self.optimum_array
+    if validInputs?( cpi, aht )
+      check_inputs ( cpi, interval, aht, svl_goal, asa_goal, occ_goal )
+      @valid = true
+      @agents_required = self.agents_required
+      @svl_result = self.svl(@agents_required)
+      @asa_result = self.asa(@agents_required)
+      @occ_result = self.rho(@agents_required)
+      @detail_result = self.optimum_array
+      return self
     else
-      return @error = "Invalid information supplied to ErlangRequest Initialize method"
+      @valid = false
+      @error = "Invalid information supplied to ErlangRequest Initialize method"
+      return nil
     end
   end
   
-  def invalid?
-    @cpi == 0 || @aht == 0 || @cpi.nil? || @aht.nil?
+  def valid?
+    @valid
   end
   
-  def valid?
-    not self.invalid?
-  end
-
   def traffic_intensity
     self.valid? ? (@cpi.to_f / @interval.to_f * @aht.to_f) : nil
   end
@@ -104,7 +153,7 @@ class ErlangRequest
   
   def agents_required
     return nil if self.invalid?
-    svl_ok, optimum, i = false, 0, 1
+    svl_ok, optimum, i = false, 0, self.traffic_intensity.to_i
     while svl_ok == false
       if  self.svl(i) >= (@svl_goal.to_f / 100) && self.rho(i) <= 1.0 &&
           self.rho(i) <= (@occ_goal.to_f / 100) && self.asa(i) <= @asa_goal &&
